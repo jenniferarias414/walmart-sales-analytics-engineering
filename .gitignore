@@ -1,0 +1,31 @@
+# Source datasets supplied for local project work
+data/raw/*.csv
+
+# Private project notes
+notes/private/
+
+# Credentials and local configuration
+.env
+*.env
+profiles.yml
+secrets/
+*.pem
+*.key
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# dbt-generated files
+target/
+dbt_packages/
+logs/
+
+# Local report exports
+reports/generated/
+
+# macOS and editor files
+.DS_Store
+.vscode/
