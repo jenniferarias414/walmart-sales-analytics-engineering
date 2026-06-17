@@ -27,7 +27,7 @@ dbt staging models
 dbt dimensional models
         ↓
 Python reporting
-```
+````
 
 ## Dimensional Model
 
