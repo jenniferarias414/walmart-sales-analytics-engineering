@@ -26,7 +26,7 @@ JSON manifest
 
 ## Why not manual upload?
 
-Manual upload through the AWS console would work for a small demo, but it is harder to reproduce and does not automatically record validation metadata.
+Manual upload through the AWS console would work for a small demo, but it is harder to reproduce, is more work, and does not automatically record validation metadata.
 
 The Python utility was a better fit because it:
 
@@ -81,8 +81,6 @@ The Python utility simulates the upstream producer role for this project without
 
 ## Completed evidence
 
-The successful S3 load was captured in:
+The successful S3 batch ingestion is shown in the screenshot below, including the completed uploads and manifest creation.
 
-```text
-screenshots/full-walkthrough/04-s3-batch-ingestion-complete.png
-```
+![S3 batch ingestion complete](../screenshots/full-walkthrough/04-s3-batch-ingestion-complete.png)
