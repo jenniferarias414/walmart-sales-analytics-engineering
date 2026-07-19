@@ -29,3 +29,7 @@ reports/generated/
 # macOS and editor files
 .DS_Store
 .vscode/
+
+# Generated ingestion manifests may contain local paths/account metadata.
+manifests/*.json
+!manifests/.gitkeep
