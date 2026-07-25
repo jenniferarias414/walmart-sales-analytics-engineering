@@ -38,3 +38,19 @@ The source data was supplied locally as one controlled batch. A Python utility p
 ### Outcome
 
 The utility uploaded the source files to the S3 landing prefix and created a JSON manifest for the ingestion run.
+
+## ADR 003: Snowflake raw layer with source-preserving VARCHAR columns
+
+### Decision
+
+Load the S3-landed CSV files into Snowflake raw tables with mostly `VARCHAR` columns.
+
+### Rationale
+
+The source files are CSVs, which are text-based and do not enforce a strong schema. The raw Snowflake layer is intended to preserve the source delivery with minimal assumptions.
+
+Intentional casting to dates, numbers, booleans, and decimals will happen later in dbt staging models.
+
+### Outcome
+
+The raw tables preserve the original source fields and include metadata columns for source file name and load timestamp. Row counts were validated against the original source profile.
