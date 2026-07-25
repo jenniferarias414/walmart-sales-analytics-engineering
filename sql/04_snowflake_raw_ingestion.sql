@@ -3,25 +3,50 @@
 -- Project: Walmart Sales Analytics Engineering
 --
 -- Goal:
--- Load the original S3-landed CSV files into Snowflake raw tables.
+-- Load the original Walmart CSV files from the S3 landing bucket
+-- into Snowflake raw tables.
 --
--- This script intentionally keeps the raw layer source-preserving.
--- Most raw columns are VARCHAR. Type casting happens later in dbt
--- staging models.
+-- At this point in the project, I am not building the final
+-- dimensions or fact table yet. This phase only creates the raw
+-- Snowflake layer.
+--
+-- Raw layer decision:
+-- The CSV files are loaded into mostly VARCHAR columns so the raw
+-- tables stay close to the original source files. The intentional
+-- casts to NUMBER, DATE, BOOLEAN, and DECIMAL will happen later in
+-- dbt staging models.
 -- ============================================================
 
 
 -- ============================================================
--- 1. Use an admin-capable role for setup
+-- 1. Use setup role
 -- ============================================================
--- ACCOUNTADMIN is commonly used for learning/sandbox setup because
--- storage integrations require elevated privileges.
--- In an enterprise account, a more controlled role would usually own this.
+-- I am using ACCOUNTADMIN for this setup because this is my personal
+-- Snowflake project account and storage integrations require elevated
+-- privileges.
+--
+-- In a work environment, this type of setup would usually be handled
+-- by a Snowflake admin/platform role instead of an individual developer
+-- role.
+-- ============================================================
 USE ROLE ACCOUNTADMIN;
 
 
 -- ============================================================
 -- 2. Create project warehouse, database, and schemas
+-- ============================================================
+-- The warehouse provides compute for running SQL.
+-- The database keeps this project isolated from other work.
+-- The schemas separate the pipeline layers:
+--
+-- RAW:
+--   Source-preserving tables loaded from S3.
+--
+-- STAGING:
+--   dbt models that rename fields and apply data types.
+--
+-- MARTS:
+--   Final business-ready dimension and fact tables.
 -- ============================================================
 
 CREATE WAREHOUSE IF NOT EXISTS WH_WALMART_XS
@@ -42,13 +67,19 @@ USE SCHEMA RAW;
 
 
 -- ============================================================
--- 3. Create a CSV file format
+-- 3. Create CSV file format
 -- ============================================================
--- This tells Snowflake how to interpret the CSV files.
+-- This tells Snowflake how to read the CSV files in S3.
 --
--- SKIP_HEADER = 1 means the first row contains column names.
--- FIELD_OPTIONALLY_ENCLOSED_BY = '"' handles quoted CSV values.
+-- The source files have a header row, so SKIP_HEADER = 1.
+-- The files are comma-delimited.
+-- Blank fields should load as NULL instead of empty strings.
 -- EMPTY_FIELD_AS_NULL and NULL_IF help preserve blanks as NULL.
+-- FIELD_OPTIONALLY_ENCLOSED_BY = '"' handles quoted CSV values.
+-- TRIM_SPACE = TRUE removes leading/trailing whitespace from values.
+--
+-- This file format is used by the external stage and COPY INTO
+-- commands below.
 -- ============================================================
 
 CREATE OR REPLACE FILE FORMAT FF_WALMART_CSV
@@ -62,48 +93,59 @@ CREATE OR REPLACE FILE FORMAT FF_WALMART_CSV
 
 
 -- ============================================================
--- 4. Create the storage integration
+-- 4. Create Snowflake storage integration
 -- ============================================================
--- IMPORTANT:
--- Replace <AWS_ROLE_ARN_AFTER_YOU_CREATE_IT> after creating the
--- AWS IAM role.
+-- The storage integration is the Snowflake object that connects
+-- Snowflake to the allowed S3 location.
 --
--- First run this statement with a placeholder role name if you already
--- know what your IAM role ARN will be, or come back to it after creating
--- the IAM role in AWS.
+-- This does not load data by itself. It only defines the secure access
+-- path Snowflake will use later when reading files from S3.
 --
--- Planned IAM role name:
--- snowflake-walmart-s3-read-role
---
--- Example final ARN format:
--- arn:aws:iam::<your_account_id>:role/snowflake-walmart-s3-read-role
+-- Replace <AWS_ACCOUNT_ID> locally before running this script.
+-- Do not commit Snowflake external IDs or secret values to GitHub.
 -- ============================================================
 
 CREATE OR REPLACE STORAGE INTEGRATION INT_WALMART_S3
     TYPE = EXTERNAL_STAGE
     STORAGE_PROVIDER = S3
     ENABLED = TRUE
-    STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::272987324508:role/snowflake-walmart-s3-read-role'
+    STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::<AWS_ACCOUNT_ID>:role/snowflake-walmart-s3-read-role'
     STORAGE_ALLOWED_LOCATIONS = (
         's3://walmart-sales-landing-jenny/landing/walmart/batch_01/'
     );
 
 
 -- ============================================================
--- 5. Run this after creating the storage integration
+-- 5. Describe the storage integration
 -- ============================================================
--- Copy the values for:
--- STORAGE_AWS_IAM_USER_ARN
--- STORAGE_AWS_EXTERNAL_ID
+-- DESC INTEGRATION returns Snowflake-generated values needed for
+-- the AWS IAM role trust policy:
 --
--- You will use those values in the AWS IAM role trust policy.
+-- STORAGE_AWS_IAM_USER_ARN:
+--   The Snowflake IAM principal that AWS should trust.
+--
+-- STORAGE_AWS_EXTERNAL_ID:
+--   The external ID AWS uses to confirm the AssumeRole request is
+--   coming from this Snowflake integration.
+--
+-- I used these values in AWS when creating the IAM role. I do not
+-- commit the actual external ID to the repo.
 -- ============================================================
 
 DESC INTEGRATION INT_WALMART_S3;
 
 
 -- ============================================================
--- Phase 4B: Create external stage, raw tables, and load S3 files
+-- Phase 4B: Create stage, raw tables, and load files
+-- ============================================================
+-- After the Snowflake integration and AWS IAM role trust are connected,
+-- Snowflake can read the files in the S3 landing prefix.
+--
+-- This section creates:
+--   1. An external stage pointing to the S3 batch folder
+--   2. Raw tables for each source file
+--   3. COPY INTO commands to load each CSV
+--   4. Row-count validation queries
 -- ============================================================
 
 USE ROLE ACCOUNTADMIN;
@@ -115,8 +157,14 @@ USE SCHEMA RAW;
 -- ============================================================
 -- 6. Create external stage
 -- ============================================================
--- The stage points Snowflake to the S3 prefix that contains the CSVs.
--- It uses the storage integration for secure access.
+-- The stage is a Snowflake pointer to the S3 folder where the batch
+-- files landed.
+--
+-- The stage uses:
+--   - the storage integration for S3 access
+--   - the CSV file format for parsing
+--
+-- LIST confirms Snowflake can see the expected files before loading.
 -- ============================================================
 
 CREATE OR REPLACE STAGE STG_WALMART_S3_BATCH_01
@@ -132,8 +180,18 @@ LIST @STG_WALMART_S3_BATCH_01;
 -- ============================================================
 -- 7. Create raw tables
 -- ============================================================
--- Raw tables intentionally keep values as VARCHAR.
--- dbt staging will cast to NUMBER, DATE, BOOLEAN, DECIMAL, etc.
+-- These tables are the Snowflake raw layer.
+--
+-- I am keeping the source fields as VARCHAR on purpose because the
+-- files came from CSV. This keeps the raw layer close to the original
+-- source delivery.
+--
+-- dbt staging models will later cast these fields into the intended
+-- warehouse types.
+--
+-- I also add:
+--   source_file_name = which S3 file the row came from
+--   loaded_at        = when Snowflake loaded the row
 -- ============================================================
 
 CREATE OR REPLACE TABLE RAW_WALMART_STORES (
@@ -175,9 +233,18 @@ CREATE OR REPLACE TABLE RAW_WALMART_STORE_FEATURES (
 -- ============================================================
 -- 8. Load raw tables from S3
 -- ============================================================
--- COPY INTO loads staged files into Snowflake tables.
--- We are loading CSV columns by position: $1, $2, $3, etc.
--- We also add source metadata columns manually.
+-- COPY INTO loads data from the external stage into Snowflake tables.
+--
+-- The CSV columns are referenced by position:
+--   $1 = first CSV column
+--   $2 = second CSV column
+--   etc.
+--
+-- I am not using column-name matching here because the raw tables
+-- include extra metadata columns that do not exist in the CSV files.
+--
+-- ON_ERROR = 'ABORT_STATEMENT' tells Snowflake to stop if the load
+-- encounters a problem instead of silently skipping bad rows.
 -- ============================================================
 
 COPY INTO RAW_WALMART_STORES (
@@ -265,10 +332,16 @@ ON_ERROR = 'ABORT_STATEMENT';
 -- ============================================================
 -- 9. Validate raw row counts
 -- ============================================================
--- These should match the source profile:
--- stores: 45
--- department sales: 421,570
--- store features: 8,190
+-- The raw Snowflake row counts should match the source profiling
+-- results from analysis/output/source-data-profile.md.
+--
+-- Expected:
+--   RAW_WALMART_STORES              45
+--   RAW_WALMART_DEPARTMENT_SALES    421,570
+--   RAW_WALMART_STORE_FEATURES      8,190
+--
+-- Matching counts confirm that the S3-to-Snowflake raw load preserved
+-- the expected number of source rows.
 -- ============================================================
 
 SELECT 'RAW_WALMART_STORES' AS table_name, COUNT(*) AS row_count
@@ -282,6 +355,6 @@ FROM RAW_WALMART_STORE_FEATURES;
 
 
 -- Preview raw rows.
-SELECT * FROM RAW_WALMART_STORES LIMIT 10;
-SELECT * FROM RAW_WALMART_DEPARTMENT_SALES LIMIT 10;
-SELECT * FROM RAW_WALMART_STORE_FEATURES LIMIT 10;
+SELECT * FROM RAW_WALMART_STORES LIMIT 10;    -- 45 rows expected
+SELECT * FROM RAW_WALMART_DEPARTMENT_SALES LIMIT 10;  -- 421,570 rows expected
+SELECT * FROM RAW_WALMART_STORE_FEATURES LIMIT 10;  -- 8,190 rows expected
