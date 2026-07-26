@@ -54,3 +54,31 @@ Intentional casting to dates, numbers, booleans, and decimals will happen later 
 ### Outcome
 
 The raw tables preserve the original source fields and include metadata columns for source file name and load timestamp. Row counts were validated against the original source profile.
+
+## ADR 004: Local dbt Core setup with external profile
+
+### Decision
+
+Use a local dbt Core project inside the repository and keep Snowflake connection settings in `~/.dbt/profiles.yml`.
+
+### Rationale
+
+The dbt project files should be version controlled, but local connection details and credentials should not be committed to GitHub.
+
+Using environment variables allows the project to reference Snowflake credentials without storing the password in the repo.
+
+This project uses dbt Core from the command line instead of building directly in the browser-based dbt workspace. That keeps the dbt code, screenshots, SQL scripts, and project documentation together in one GitHub repository while still connecting to the same Snowflake warehouse.
+
+### Outcome
+
+`dbt debug` confirmed that the local dbt project and Snowflake connection are working.
+
+### Evidence
+
+The successful dbt connection check is shown below.
+
+![dbt debug success](../screenshots/full-walkthrough/07-dbt-debug-success.png)
+
+The declared raw Snowflake tables are visible to dbt as sources.
+
+![dbt source list](../screenshots/full-walkthrough/08-dbt-source-list.png)
