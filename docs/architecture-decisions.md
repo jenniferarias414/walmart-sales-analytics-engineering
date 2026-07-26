@@ -109,3 +109,39 @@ The local dbt docs site also shows the declared Walmart raw sources.
 - [dbt sources](https://docs.getdbt.com/docs/build/sources)
 - [dbt commands](https://docs.getdbt.com/reference/dbt-commands)
 - [dbt docs generate and serve](https://docs.getdbt.com/reference/commands/cmd-docs)
+
+## ADR 005: Source-aligned dbt staging layer
+
+### Decision
+
+Create one dbt staging model for each Walmart raw source table.
+
+```text
+RAW_WALMART_STORES              -> stg_walmart_stores
+RAW_WALMART_DEPARTMENT_SALES    -> stg_walmart_department_sales
+RAW_WALMART_STORE_FEATURES      -> stg_walmart_store_features
+```
+
+### Rationale
+
+The raw Snowflake tables preserve the CSV delivery with mostly `VARCHAR` fields. The staging layer is responsible for renaming fields and applying intentional warehouse data types while keeping each model close to its source grain.
+
+Joins are intentionally deferred to the intermediate layer so each source can be cleaned and tested independently first.
+
+### Outcome
+
+The staging models were built as dbt views and tested with not-null, accepted-values, unique, and composite-key checks. Row counts matched the earlier source and raw validation results.
+
+### Evidence
+
+The staging build completed successfully.
+
+![dbt staging build success](../screenshots/full-walkthrough/10-dbt-staging-build-success.png)
+
+Snowflake staging row counts matched the expected source counts.
+
+![Snowflake staging row count validation](../screenshots/full-walkthrough/11-snowflake-staging-row-count-validation.png)
+
+dbt docs show each raw source flowing into its staging model.
+
+![dbt docs staging lineage](../screenshots/full-walkthrough/12-dbt-docs-staging-lineage.png)
