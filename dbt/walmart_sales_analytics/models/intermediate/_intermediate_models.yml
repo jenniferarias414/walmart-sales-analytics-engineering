@@ -1,0 +1,88 @@
+version: 2
+
+models:
+  - name: int_walmart_sales_enriched
+    description: Enriched weekly Walmart sales model joining department sales to store/date features and store attributes. One row per store, department, and date.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - store_id
+              - dept_id
+              - store_date
+    columns:
+      - name: store_id
+        description: Store identifier.
+        data_tests:
+          - not_null
+
+      - name: dept_id
+        description: Department identifier.
+        data_tests:
+          - not_null
+
+      - name: store_date
+        description: Weekly sales date.
+        data_tests:
+          - not_null
+
+      - name: date_id
+        description: Deterministic date key in YYYYMMDD format.
+        data_tests:
+          - not_null
+
+      - name: store_weekly_sales
+        description: Weekly sales amount for the store, department, and date.
+        data_tests:
+          - not_null
+
+      - name: is_holiday
+        description: Holiday flag from the sales source.
+
+      - name: store_type
+        description: Store type from the store attributes source.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['A', 'B', 'C']
+
+      - name: store_size
+        description: Store size from the store attributes source.
+        data_tests:
+          - not_null
+
+      - name: store_temperature
+        description: Temperature for the store/date context record.
+        data_tests:
+          - not_null
+
+      - name: fuel_price
+        description: Fuel price for the store/date context record.
+        data_tests:
+          - not_null
+
+      - name: markdown1
+        description: Markdown field 1. Nulls are preserved from the source.
+
+      - name: markdown2
+        description: Markdown field 2. Nulls are preserved from the source.
+
+      - name: markdown3
+        description: Markdown field 3. Nulls are preserved from the source.
+
+      - name: markdown4
+        description: Markdown field 4. Nulls are preserved from the source.
+
+      - name: markdown5
+        description: Markdown field 5. Nulls are preserved from the source.
+
+      - name: cpi
+        description: CPI value for the store/date context record.
+        data_tests:
+          - not_null
+
+      - name: unemployment
+        description: Unemployment value for the store/date context record.
+        data_tests:
+          - not_null
