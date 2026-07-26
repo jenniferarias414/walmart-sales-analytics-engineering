@@ -69,9 +69,25 @@ Using environment variables allows the project to reference Snowflake credential
 
 This project uses dbt Core from the command line instead of building directly in the browser-based dbt workspace. That keeps the dbt code, screenshots, SQL scripts, and project documentation together in one GitHub repository while still connecting to the same Snowflake warehouse.
 
+### Core vs browser-based dbt workflow
+
+In this project, local dbt Core is used for development:
+
+```text
+VS Code + terminal + ~/.dbt/profiles.yml
+```
+
+A browser-based dbt workspace can also be used for development:
+
+```text
+dbt web IDE + UI-managed connection + hosted docs/lineage
+```
+
+The local Core approach was chosen to keep this end-to-end project self-contained in one repo.
+
 ### Outcome
 
-`dbt debug` confirmed that the local dbt project and Snowflake connection are working.
+`dbt debug` confirmed that the local dbt project and Snowflake connection are working. `dbt ls --resource-type source` confirmed the three raw Snowflake tables are declared as dbt sources.
 
 ### Evidence
 
@@ -82,3 +98,14 @@ The successful dbt connection check is shown below.
 The declared raw Snowflake tables are visible to dbt as sources.
 
 ![dbt source list](../screenshots/full-walkthrough/08-dbt-source-list.png)
+
+The local dbt docs site also shows the declared Walmart raw sources.
+
+![dbt docs source lineage](../screenshots/full-walkthrough/09-dbt-docs-source-lineage.png)
+
+### Official references
+
+- [dbt Core connection profiles](https://docs.getdbt.com/docs/core/connect-data-platform/connection-profiles)
+- [dbt sources](https://docs.getdbt.com/docs/build/sources)
+- [dbt commands](https://docs.getdbt.com/reference/dbt-commands)
+- [dbt docs generate and serve](https://docs.getdbt.com/reference/commands/cmd-docs)

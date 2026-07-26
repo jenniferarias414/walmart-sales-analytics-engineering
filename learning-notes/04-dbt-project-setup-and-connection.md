@@ -6,39 +6,40 @@ After loading the Walmart source files into Snowflake raw tables, I set up dbt s
 
 This phase does not transform data yet. It confirms that dbt is installed, connected to Snowflake, and aware of the raw source tables.
 
-## Flow
-
-```text
-Snowflake raw tables
-    ↓
-dbt project configuration
-    ↓
-local dbt profile
-    ↓
-dbt debug
-    ↓
-dbt source definitions
-```
-
 ## Local dbt Core setup
 
-This project uses local dbt Core from the command line.
+This project uses dbt Core locally from the command line.
 
-That means dbt commands are run from the terminal, while project files are edited in VS Code.
+That means:
 
-Examples:
-
-```bash
-dbt debug
-dbt parse
-dbt ls
-dbt run
-dbt test
+```text
+VS Code is used to edit project files.
+The terminal is used to run dbt commands.
+Snowflake is the warehouse where SQL runs.
+GitHub version-controls the project files.
 ```
 
-A browser-based dbt workflow can hide some of this setup in the UI. With local dbt Core, I need a local profile file so dbt knows how to connect to Snowflake.
+This is different from a browser-based dbt workspace where connection settings and the development environment may be managed through the UI.
 
-## Files created in the repo
+## Why I used dbt Core here
+
+The Walmart project is an end-to-end repo that includes:
+
+```text
+Python profiling
+Python S3 ingestion
+Snowflake SQL setup
+dbt transformation project
+documentation
+screenshots
+learning notes
+```
+
+Using dbt Core locally keeps the dbt project files inside the same repo as the rest of the build.
+
+The Snowflake connection profile lives outside the repo so credentials are not committed.
+
+## Repo files created
 
 The dbt project lives under:
 
@@ -54,7 +55,7 @@ models/staging/_walmart_sources.yml
 macros/generate_schema_name.sql
 ```
 
-## Local profile
+## Local profile outside the repo
 
 dbt Core uses a local profile file for warehouse connection settings:
 
@@ -62,9 +63,63 @@ dbt Core uses a local profile file for warehouse connection settings:
 ~/.dbt/profiles.yml
 ```
 
+On this machine, that means:
+
+```text
+/Users/e189958/.dbt/profiles.yml
+```
+
 This file is outside the repo and should not be committed.
 
-The profile points dbt to Snowflake using account, user, role, warehouse, database, schema, and a password environment variable.
+The profile points dbt to Snowflake using:
+
+```text
+account
+user
+role
+warehouse
+database
+schema
+password environment variable
+```
+
+## Environment variables
+
+The profile uses environment variables for credentials:
+
+```yaml
+account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+user: "{{ env_var('SNOWFLAKE_USER') }}"
+password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+```
+
+The password is supplied in the terminal session instead of being saved to GitHub.
+
+Because this terminal uses zsh, the working password prompt command was:
+
+```bash
+read -s "SNOWFLAKE_PASSWORD?Snowflake password: "
+```
+
+## dbt command sequence used
+
+```bash
+dbt debug
+dbt parse
+dbt ls --resource-type source
+dbt docs generate
+dbt docs serve
+```
+
+What each command proved:
+
+| Command | Purpose |
+|---|---|
+| `dbt debug` | Validated the dbt project, profile, adapter, and Snowflake connection |
+| `dbt parse` | Parsed the dbt project files |
+| `dbt ls --resource-type source` | Listed the declared raw Snowflake tables as dbt sources |
+| `dbt docs generate` | Generated local documentation artifacts |
+| `dbt docs serve` | Opened a local dbt docs site in the browser |
 
 ## Source configuration
 
@@ -82,39 +137,30 @@ Future dbt models can reference the raw tables with:
 {{ source('walmart_raw', 'department_sales') }}
 ```
 
-instead of hardcoding full database and schema names.
-
-## Validation
-
-`dbt debug` was used to confirm that the dbt project and Snowflake connection are working.
-
-A successful result shows:
-
-```text
-All checks passed!
-```
+instead of hardcoding the full database, schema, and table name.
 
 ## Completed evidence
 
-Add the dbt debug screenshot here:
-
-```text
-screenshots/full-walkthrough/07-dbt-debug-success.png
-```
+`dbt debug` confirmed the local dbt project could connect to Snowflake:
 
 ![dbt debug success](../screenshots/full-walkthrough/07-dbt-debug-success.png)
 
-Add the dbt source list screenshot here:
-
-```text
-screenshots/full-walkthrough/08-dbt-source-list.png
-```
+`dbt ls --resource-type source` confirmed dbt recognized the raw Snowflake tables as sources:
 
 ![dbt source list](../screenshots/full-walkthrough/08-dbt-source-list.png)
 
-The local dbt docs site also shows the declared Walmart raw sources:
+The local dbt docs site showed the Walmart raw sources in the generated documentation:
 
 ![dbt docs source lineage](../screenshots/full-walkthrough/09-dbt-docs-source-lineage.png)
+
+## Official dbt references
+
+- [dbt Core connection profiles](https://docs.getdbt.com/docs/core/connect-data-platform/connection-profiles)
+- [dbt sources](https://docs.getdbt.com/docs/build/sources)
+- [dbt commands](https://docs.getdbt.com/reference/dbt-commands)
+- [dbt debug](https://docs.getdbt.com/reference/commands/debug)
+- [dbt docs generate and serve](https://docs.getdbt.com/reference/commands/cmd-docs)
+- [dbt Studio IDE](https://docs.getdbt.com/docs/cloud/studio-ide/develop-in-studio)
 
 ## Main takeaway
 
@@ -135,3 +181,5 @@ Local connection settings outside the repo.
 Environment variables:
 Temporary credential values used by dbt at runtime.
 ```
+
+Next, the project moves into dbt staging models, where the raw `VARCHAR` fields will be renamed and cast into intentional warehouse types.
