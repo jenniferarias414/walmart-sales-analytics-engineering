@@ -112,6 +112,10 @@ screenshots/full-walkthrough/08-dbt-source-list.png
 
 ![dbt source list](../screenshots/full-walkthrough/08-dbt-source-list.png)
 
+The local dbt docs site also shows the declared Walmart raw sources:
+
+![dbt docs source lineage](../screenshots/full-walkthrough/09-dbt-docs-source-lineage.png)
+
 ## Main takeaway
 
 This phase connects dbt to the warehouse but does not transform data yet.
