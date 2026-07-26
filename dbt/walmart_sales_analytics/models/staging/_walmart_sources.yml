@@ -1,0 +1,101 @@
+version: 2
+
+sources:
+  - name: walmart_raw
+    description: Raw Walmart source tables loaded from the S3 landing batch.
+    database: WALMART_SALES_ANALYTICS
+    schema: RAW
+
+    tables:
+      - name: stores
+        identifier: RAW_WALMART_STORES
+        description: Raw store attributes loaded from stores.csv.
+        columns:
+          - name: store_raw
+            description: Raw store identifier from the source CSV.
+            data_tests:
+              - not_null
+          - name: type_raw
+            description: Raw store type from the source CSV.
+          - name: size_raw
+            description: Raw store size from the source CSV.
+          - name: source_file_name
+            description: S3 file name captured during Snowflake raw load.
+            data_tests:
+              - not_null
+          - name: loaded_at
+            description: Timestamp when Snowflake loaded the row.
+            data_tests:
+              - not_null
+
+      - name: department_sales
+        identifier: RAW_WALMART_DEPARTMENT_SALES
+        description: Raw weekly department sales loaded from department.csv.
+        columns:
+          - name: store_raw
+            description: Raw store identifier.
+            data_tests:
+              - not_null
+          - name: dept_raw
+            description: Raw department identifier.
+            data_tests:
+              - not_null
+          - name: date_raw
+            description: Raw sales week date.
+            data_tests:
+              - not_null
+          - name: weekly_sales_raw
+            description: Raw weekly sales amount.
+            data_tests:
+              - not_null
+          - name: is_holiday_raw
+            description: Raw holiday flag.
+          - name: source_file_name
+            description: S3 file name captured during Snowflake raw load.
+            data_tests:
+              - not_null
+          - name: loaded_at
+            description: Timestamp when Snowflake loaded the row.
+            data_tests:
+              - not_null
+
+      - name: store_features
+        identifier: RAW_WALMART_STORE_FEATURES
+        description: Raw store/date contextual features loaded from fact.csv.
+        columns:
+          - name: store_raw
+            description: Raw store identifier.
+            data_tests:
+              - not_null
+          - name: date_raw
+            description: Raw feature date.
+            data_tests:
+              - not_null
+          - name: temperature_raw
+            description: Raw temperature value.
+          - name: fuel_price_raw
+            description: Raw fuel price value.
+          - name: markdown1_raw
+            description: Raw markdown 1 value.
+          - name: markdown2_raw
+            description: Raw markdown 2 value.
+          - name: markdown3_raw
+            description: Raw markdown 3 value.
+          - name: markdown4_raw
+            description: Raw markdown 4 value.
+          - name: markdown5_raw
+            description: Raw markdown 5 value.
+          - name: cpi_raw
+            description: Raw CPI value.
+          - name: unemployment_raw
+            description: Raw unemployment value.
+          - name: is_holiday_raw
+            description: Raw holiday flag.
+          - name: source_file_name
+            description: S3 file name captured during Snowflake raw load.
+            data_tests:
+              - not_null
+          - name: loaded_at
+            description: Timestamp when Snowflake loaded the row.
+            data_tests:
+              - not_null

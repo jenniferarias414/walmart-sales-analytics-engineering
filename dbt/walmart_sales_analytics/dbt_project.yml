@@ -1,0 +1,33 @@
+name: walmart_sales_analytics
+version: '1.0.0'
+config-version: 2
+
+profile: walmart_sales_analytics
+
+model-paths: ["models"]
+snapshot-paths: ["snapshots"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  walmart_sales_analytics:
+    staging:
+      +schema: STAGING
+      +materialized: view
+
+    intermediate:
+      +schema: STAGING
+      +materialized: view
+
+    marts:
+      +schema: MARTS
+      +materialized: table
+
+snapshots:
+  walmart_sales_analytics:
+    +target_schema: MARTS
