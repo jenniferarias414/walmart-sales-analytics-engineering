@@ -1,4 +1,3 @@
-cat > models/staging/stg_walmart_department_sales.sql <<'SQL'
 with source as (
 
     select *
@@ -24,4 +23,3 @@ renamed_and_casted as (
 
 select *
 from renamed_and_casted
-SQL
