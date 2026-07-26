@@ -1,0 +1,118 @@
+version: 2
+
+models:
+  - name: stg_walmart_stores
+    description: Cleaned staging view for raw Walmart store attributes. One row per store.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - store_id
+    columns:
+      - name: store_id
+        description: Store identifier.
+        data_tests:
+          - not_null
+          - unique
+      - name: store_type
+        description: Store type classification from the source file.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['A', 'B', 'C']
+      - name: store_size
+        description: Store size from the source file.
+        data_tests:
+          - not_null
+      - name: source_file_name
+        description: Source S3 file name captured during raw load.
+        data_tests:
+          - not_null
+      - name: loaded_at
+        description: Timestamp when the raw row was loaded into Snowflake.
+        data_tests:
+          - not_null
+
+  - name: stg_walmart_department_sales
+    description: Cleaned staging view for raw weekly department sales. One row per store, department, and date.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - store_id
+              - dept_id
+              - store_date
+    columns:
+      - name: store_id
+        description: Store identifier.
+        data_tests:
+          - not_null
+      - name: dept_id
+        description: Department identifier.
+        data_tests:
+          - not_null
+      - name: store_date
+        description: Weekly sales date.
+        data_tests:
+          - not_null
+      - name: store_weekly_sales
+        description: Weekly sales for the store, department, and date.
+        data_tests:
+          - not_null
+      - name: is_holiday
+        description: Holiday flag for the sales week.
+      - name: source_file_name
+        description: Source S3 file name captured during raw load.
+        data_tests:
+          - not_null
+      - name: loaded_at
+        description: Timestamp when the raw row was loaded into Snowflake.
+        data_tests:
+          - not_null
+
+  - name: stg_walmart_store_features
+    description: Cleaned staging view for raw store/date contextual features. One row per store and date.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - store_id
+              - store_date
+    columns:
+      - name: store_id
+        description: Store identifier.
+        data_tests:
+          - not_null
+      - name: store_date
+        description: Feature date.
+        data_tests:
+          - not_null
+      - name: store_temperature
+        description: Temperature for the store/date record.
+      - name: fuel_price
+        description: Fuel price for the store/date record.
+      - name: markdown1
+        description: Markdown field 1.
+      - name: markdown2
+        description: Markdown field 2.
+      - name: markdown3
+        description: Markdown field 3.
+      - name: markdown4
+        description: Markdown field 4.
+      - name: markdown5
+        description: Markdown field 5.
+      - name: cpi
+        description: CPI value for the store/date record.
+      - name: unemployment
+        description: Unemployment value for the store/date record.
+      - name: is_holiday
+        description: Holiday flag for the store/date record.
+      - name: source_file_name
+        description: Source S3 file name captured during raw load.
+        data_tests:
+          - not_null
+      - name: loaded_at
+        description: Timestamp when the raw row was loaded into Snowflake.
+        data_tests:
+          - not_null
