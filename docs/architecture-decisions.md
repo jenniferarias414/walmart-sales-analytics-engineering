@@ -277,3 +277,41 @@ After running the demo snapshot once normally and once with the demo variable en
 The SCD2 demo proof shows current and historical row counts and the two versions for the changed key.
 
 ![SCD2 demo versioning proof](../screenshots/full-walkthrough/23-scd2-demo-versioning-proof.png)
+
+## ADR 010: Python reporting outputs from Snowflake marts
+
+### Decision
+
+Create a Python reporting script that queries the final Snowflake mart tables and generates CSV and PNG outputs.
+
+### Rationale
+
+The warehouse build should support analysis, not only table creation. A Python script makes the reporting step reproducible and keeps the business SQL visible in the project.
+
+The reporting script uses the final marts:
+
+```text
+WALMART_FACT_TABLE
+WALMART_DATE_DIM
+WALMART_STORE_DIM
+```
+
+The reports focus on sales trends, store type performance, holiday comparison, top store/department combinations, markdown activity, and temperature bands.
+
+### Outcome
+
+The script generates CSV outputs, PNG charts, and a Markdown reporting summary under `reports/generated/`.
+
+### Evidence
+
+The Python reporting script completed successfully.
+
+![Python reporting script success](../screenshots/full-walkthrough/24-python-reporting-script-success.png)
+
+The generated outputs are shown here.
+
+![Reporting outputs generated](../screenshots/full-walkthrough/25-reporting-outputs-generated.png)
+
+Sample report chart:
+
+![Sample report chart](../screenshots/full-walkthrough/26-sample-report-chart.png)
