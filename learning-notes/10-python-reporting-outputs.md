@@ -68,7 +68,7 @@ write a short reporting summary
 The reporting script is:
 
 ```text
-python/generate_walmart_reports.py
+scripts/generate_walmart_reports.py
 ```
 
 ## SQL

@@ -33,3 +33,7 @@ reports/generated/
 # Generated ingestion manifests may contain local paths/account metadata.
 manifests/*.json
 !manifests/.gitkeep
+
+# Local/private project notes
+
+notes/

@@ -5,7 +5,7 @@ This project includes a Python reporting script that queries the final Snowflake
 ## Script
 
 ```text
-python/generate_walmart_reports.py
+scripts/generate_walmart_reports.py
 ```
 
 ## SQL
