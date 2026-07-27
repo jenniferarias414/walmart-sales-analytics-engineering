@@ -183,3 +183,33 @@ The Snowflake validation confirmed the intermediate model preserved the sales gr
 The dbt docs lineage shows the staging models feeding the intermediate model.
 
 ![dbt docs intermediate lineage](../screenshots/full-walkthrough/15-dbt-docs-intermediate-lineage.png)
+
+## ADR 007: SCD Type 1 dimension tables
+
+### Decision
+
+Build `walmart_date_dim` and `walmart_store_dim` as SCD Type 1 mart tables from `int_walmart_sales_enriched`.
+
+### Rationale
+
+The project requires SCD Type 1 dimensions. The date dimension uses one row per sales date with a deterministic `YYYYMMDD` date key. The store dimension follows the supplied target design with one row per store and department combination.
+
+SCD Type 1 is appropriate here because the dimension tables do not need to preserve separate historical versions. The versioned history requirement is handled later by the SCD2-style fact table.
+
+### Outcome
+
+The dimension models were built as dbt table models and validated with row counts, uniqueness checks, and dbt tests.
+
+### Evidence
+
+The dbt dimension build completed successfully.
+
+![dbt dimensions build success](../screenshots/full-walkthrough/16-dbt-dimensions-build-success.png)
+
+Snowflake validation confirmed the expected dimension row counts and uniqueness checks.
+
+![Snowflake dimension validation](../screenshots/full-walkthrough/17-snowflake-dimension-validation.png)
+
+dbt docs show the intermediate model feeding the dimension models.
+
+![dbt docs dimension lineage](../screenshots/full-walkthrough/18-dbt-docs-dimension-lineage.png)
