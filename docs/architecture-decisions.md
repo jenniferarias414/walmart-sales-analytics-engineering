@@ -255,3 +255,25 @@ Snowflake validation confirmed fact row counts, current/historical status, curre
 dbt docs show the snapshot feeding the final fact table.
 
 ![dbt docs fact lineage](../screenshots/full-walkthrough/22-dbt-docs-fact-lineage.png)
+
+## ADR 009: Separate optional SCD2 demo snapshot
+
+### Decision
+
+Create `demo_walmart_fact_snapshot` as a separate optional proof artifact for SCD2 behavior.
+
+### Rationale
+
+The official fact table has zero historical rows because the project has only one observed source batch. That is correct, but it does not visually demonstrate how SCD2 versioning appears after a changed batch.
+
+The demo snapshot simulates a changed tracked value using a dbt variable. This proves the SCD2 mechanism without modifying source files, raw tables, the official snapshot, or the official fact table.
+
+### Outcome
+
+After running the demo snapshot once normally and once with the demo variable enabled, the demo snapshot shows one historical version and one new current version for the selected business key.
+
+### Evidence
+
+The SCD2 demo proof shows current and historical row counts and the two versions for the changed key.
+
+![SCD2 demo versioning proof](../screenshots/full-walkthrough/23-scd2-demo-versioning-proof.png)

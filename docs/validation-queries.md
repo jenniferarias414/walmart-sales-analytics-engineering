@@ -352,3 +352,67 @@ Useful screenshots:
 18-dbt-docs-dimension-lineage.png
 22-dbt-docs-fact-lineage.png
 ```
+
+## Optional SCD2 demo validation
+
+The optional demo snapshot proves SCD2 behavior without changing the official fact table.
+
+Baseline run:
+
+```bash
+dbt snapshot --select demo_walmart_fact_snapshot
+```
+
+Simulated changed-batch run:
+
+```bash
+dbt snapshot --select demo_walmart_fact_snapshot --vars '{"demo_adjust_weekly_sales": true}'
+```
+
+Demo current/historical validation:
+
+```sql
+USE ROLE ACCOUNTADMIN;
+USE WAREHOUSE WH_WALMART_XS;
+USE DATABASE WALMART_SALES_ANALYTICS;
+USE SCHEMA MARTS;
+
+SELECT
+    COUNT(*) AS total_rows,
+    COUNT_IF(dbt_valid_to IS NULL) AS current_rows,
+    COUNT_IF(dbt_valid_to IS NOT NULL) AS historical_rows
+FROM DEMO_WALMART_FACT_SNAPSHOT;
+```
+
+Expected after the changed-batch simulation:
+
+```text
+total_rows       421,571
+current_rows     421,570
+historical_rows  1
+```
+
+Changed-key inspection:
+
+```sql
+SELECT
+    store_id,
+    dept_id,
+    date_id,
+    store_weekly_sales,
+    dbt_valid_from,
+    dbt_valid_to
+FROM DEMO_WALMART_FACT_SNAPSHOT
+WHERE store_id = 1
+  AND dept_id = 1
+  AND date_id = 20100205
+ORDER BY dbt_valid_from;
+```
+
+Expected:
+
+```text
+Two rows for the changed key:
+- one historical row with dbt_valid_to populated
+- one current row with dbt_valid_to null
+```
