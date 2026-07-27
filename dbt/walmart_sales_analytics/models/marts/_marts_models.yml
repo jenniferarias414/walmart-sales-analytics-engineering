@@ -1,0 +1,77 @@
+version: 2
+
+models:
+  - name: walmart_date_dim
+    description: SCD Type 1 date dimension for Walmart sales dates. One row per sales date.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - date_id
+    columns:
+      - name: date_id
+        description: Deterministic date key in YYYYMMDD format.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: store_date
+        description: Sales date.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: is_holiday
+        description: Holiday flag for the sales date.
+
+      - name: insert_date
+        description: Timestamp when the dimension row was inserted or rebuilt.
+        data_tests:
+          - not_null
+
+      - name: update_date
+        description: Timestamp when the dimension row was most recently processed.
+        data_tests:
+          - not_null
+
+  - name: walmart_store_dim
+    description: SCD Type 1 store/department dimension. One row per store and department combination.
+    data_tests:
+      - unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - store_id
+              - dept_id
+    columns:
+      - name: store_id
+        description: Store identifier.
+        data_tests:
+          - not_null
+
+      - name: dept_id
+        description: Department identifier.
+        data_tests:
+          - not_null
+
+      - name: store_type
+        description: Store type classification.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['A', 'B', 'C']
+
+      - name: store_size
+        description: Store size.
+        data_tests:
+          - not_null
+
+      - name: insert_date
+        description: Timestamp when the dimension row was inserted or rebuilt.
+        data_tests:
+          - not_null
+
+      - name: update_date
+        description: Timestamp when the dimension row was most recently processed.
+        data_tests:
+          - not_null
