@@ -4,6 +4,8 @@ End-to-end analytics engineering project that ingests Walmart sales source files
 
 ## Project overview
 
+![Architecture overview](screenshots/full-walkthrough/00-architecture-overview.png)
+
 This project models Walmart weekly sales data into a small analytics warehouse.
 
 ```text
@@ -353,6 +355,7 @@ python scripts/generate_walmart_reports.py
 
 | Document | Purpose |
 |---|---|
+| `docs/architecture-overview.md` | Architecture diagram and walkthrough |
 | `docs/source-to-target-mapping.md` | Source-to-target mapping and field design |
 | `docs/data-model-design.md` | Dimensional modeling design |
 | `docs/architecture-decisions.md` | Architecture decision record |

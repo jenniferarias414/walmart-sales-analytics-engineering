@@ -10,6 +10,12 @@ This project built an end-to-end analytics engineering workflow for Walmart week
 
 The workflow starts with local CSV source files, ingests them to Amazon S3, loads them into Snowflake raw tables, transforms them with dbt Core, validates the modeled data, and generates reporting outputs from the final mart tables.
 
+## Architecture diagram
+
+![Architecture overview](../screenshots/full-walkthrough/00-architecture-overview.png)
+
+The diagram shows the project flow from source profiling and S3 batch landing through Snowflake ingestion, dbt transformations, dimensional modeling, SCD handling, and Python reporting outputs.
+
 ## Pipeline
 
 ```text
