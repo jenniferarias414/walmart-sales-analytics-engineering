@@ -213,3 +213,45 @@ Snowflake validation confirmed the expected dimension row counts and uniqueness 
 dbt docs show the intermediate model feeding the dimension models.
 
 ![dbt docs dimension lineage](../screenshots/full-walkthrough/18-dbt-docs-dimension-lineage.png)
+
+## ADR 008: SCD2-style fact table with dbt snapshot
+
+### Decision
+
+Use a dbt snapshot to implement the required SCD2-style fact table.
+
+The snapshot table is `walmart_fact_snapshot`, and the final project-facing table is `walmart_fact_table`.
+
+### Rationale
+
+The fact table needs versioning fields, but the source files do not provide a reliable source `updated_at` column. The dbt snapshot check strategy is appropriate because it compares selected business columns for each unique key.
+
+The logical business key is:
+
+```text
+store_id + dept_id + date_id
+```
+
+The tracked change columns include weekly sales, store size, fuel price, temperature, unemployment, CPI, and markdown fields.
+
+### Outcome
+
+The first snapshot run produced 421,570 current fact rows and zero historical rows. This is expected because only one source batch has been observed. If a later batch changes a tracked value for an existing business key, the snapshot will end-date the old row and insert a new current row.
+
+### Evidence
+
+The snapshot completed successfully.
+
+![dbt snapshot run success](../screenshots/full-walkthrough/19-dbt-snapshot-run-success.png)
+
+The final fact table built successfully.
+
+![dbt fact build success](../screenshots/full-walkthrough/20-dbt-fact-build-success.png)
+
+Snowflake validation confirmed fact row counts, current/historical status, current business-key uniqueness, and dimension relationship coverage.
+
+![Snowflake fact validation](../screenshots/full-walkthrough/21-snowflake-fact-validation.png)
+
+dbt docs show the snapshot feeding the final fact table.
+
+![dbt docs fact lineage](../screenshots/full-walkthrough/22-dbt-docs-fact-lineage.png)
