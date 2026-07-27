@@ -145,3 +145,35 @@ Snowflake staging row counts matched the expected source counts.
 dbt docs show each raw source flowing into its staging model.
 
 ![dbt docs staging lineage](../screenshots/full-walkthrough/12-dbt-docs-staging-lineage.png)
+
+## ADR 006: Intermediate enriched sales model
+
+### Decision
+
+Create `int_walmart_sales_enriched` as the reusable joined dataset between staging and final marts.
+
+### Rationale
+
+The cleaned staging models each represent one source. The final marts need a prepared sales dataset that combines department sales, store/date context, and store attributes.
+
+The department-sales staging model is the driving source because it contains the weekly sales measure and defines the target sales grain: one row per store, department, and date.
+
+Left joins preserve all sales rows while adding context and store attributes.
+
+### Outcome
+
+The intermediate model preserved the sales row count at 421,570 rows. Missing-join checks returned zero for the important joined store and context fields.
+
+### Evidence
+
+The dbt intermediate build completed successfully.
+
+![dbt intermediate build success](../screenshots/full-walkthrough/13-dbt-intermediate-build-success.png)
+
+The Snowflake validation confirmed the intermediate model preserved the sales grain.
+
+![Snowflake intermediate validation](../screenshots/full-walkthrough/14-snowflake-intermediate-validation.png)
+
+The dbt docs lineage shows the staging models feeding the intermediate model.
+
+![dbt docs intermediate lineage](../screenshots/full-walkthrough/15-dbt-docs-intermediate-lineage.png)
