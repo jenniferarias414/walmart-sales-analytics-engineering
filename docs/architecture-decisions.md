@@ -146,6 +146,12 @@ dbt docs show each raw source flowing into its staging model.
 
 ![dbt docs staging lineage](../screenshots/full-walkthrough/12-dbt-docs-staging-lineage.png)
 
+### Testing rationale
+
+The dbt tests are not required for the models to run, but they make the staging assumptions repeatable. The tests focus on source grain, required keys, accepted store types, and composite uniqueness rules discovered during profiling.
+
+The project intentionally does not test every column as not-null because some source nulls are valid, especially markdown fields.
+
 ## ADR 006: Intermediate enriched sales model
 
 ### Decision

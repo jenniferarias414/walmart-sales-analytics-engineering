@@ -99,6 +99,83 @@ The dbt docs lineage shows each raw source feeding its staging model:
 
 ![dbt docs staging lineage](../screenshots/full-walkthrough/12-dbt-docs-staging-lineage.png)
 
+## Why I added dbt tests
+
+The staging models could run without tests, but tests make the project more reliable.
+
+The tests are not there just to add complexity. They document and check assumptions discovered during profiling.
+
+Earlier profiling showed the expected grain of each source:
+
+```text
+stores:
+one row per store
+
+department sales:
+one row per store, department, and date
+
+store features:
+one row per store and date
+```
+
+In dbt, I turned those expectations into tests.
+
+Examples:
+
+```text
+stg_walmart_stores:
+store_id should be unique and not null
+
+stg_walmart_department_sales:
+store_id + dept_id + store_date should be unique together
+
+stg_walmart_store_features:
+store_id + store_date should be unique together
+```
+
+I also tested:
+
+```text
+store_type should only be A, B, or C
+important key fields should not be null
+```
+
+## Custom generic test
+
+I added a custom generic test called:
+
+```text
+unique_combination_of_columns
+```
+
+This checks whether multiple columns are unique together.
+
+That was needed because some grains are composite keys.
+
+For example:
+
+```text
+store_id + dept_id + store_date
+```
+
+is the expected unique key for department sales.
+
+A normal single-column `unique` test would not prove that.
+
+## What I did not test
+
+I did not test every column as not-null.
+
+Some nulls are expected and meaningful.
+
+For example, markdown fields had many nulls in the source, so those nulls are preserved in staging instead of being forced to zero.
+
+This keeps the staging layer honest to the source data.
+
+## How I would explain this decision
+
+> dbt tests were not mandatory for the models to run, but I added targeted tests because they make the project more trustworthy. I used the profiling results to decide what to test: key fields, candidate keys, accepted store types, and grain expectations. I did not test every column because some nulls are valid, especially the markdown fields.
+
 ## Main takeaway
 
 The staging layer is where raw source-shaped data becomes clean, typed, and ready for modeling.
